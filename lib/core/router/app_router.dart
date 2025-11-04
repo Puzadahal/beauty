@@ -9,7 +9,7 @@ import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/admin/admin_dashboard_screen.dart';
 import '../../presentation/screens/admin/admin_products_screen.dart';
 import '../../presentation/screens/admin/admin_orders_screen.dart';
-import '../../presentation/screens/teacher/teacher_take_attendance_screen.dart';
+
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
@@ -51,11 +51,6 @@ final appRouter = GoRouter(
       path: '/profile',
       name: 'profile',
       builder: (context, state) => const ProfileScreen(),
-    ),
-    GoRoute(
-      path: '/teacher/attendance',
-      name: 'teacher-attendance',
-      builder: (context, state) => const TeacherTakeAttendanceScreen(),
     ),
     GoRoute(
       path: '/admin',
