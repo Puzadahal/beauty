@@ -1,3 +1,4 @@
+import 'package:beauty_cosmetics/presentation/screens/auth/signup_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/screens/main/main_scaffold.dart';
 import '../../presentation/screens/product/product_detail_screen.dart';
@@ -47,6 +48,12 @@ final appRouter = GoRouter(
       name: 'login',
       builder: (context, state) => const LoginScreen(),
     ),
+    GoRoute(
+      path: '/signup',
+      name: 'signup',
+      builder: (context, state) => const SignupScreen(),
+    ),
+  
     GoRoute(
       path: '/profile',
       name: 'profile',

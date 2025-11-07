@@ -21,11 +21,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedCategory;
+  static const List<_QuickFilter> _quickFilters = <_QuickFilter>[
+    _QuickFilter(label: 'All Products', category: null),
+    _QuickFilter(label: 'Skincare', category: 'Skincare'),
+    _QuickFilter(label: 'Cosmetics', category: 'Cosmetics'),
+  ];
 
   @override
   void initState() {
     super.initState();
-    context.read<ProductsBloc>().add(const LoadProducts(featured: true));
+    context.read<ProductsBloc>().add(const LoadProducts());
     context.read<ProductsBloc>().add(const LoadCategories());
   }
 
@@ -41,14 +46,17 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: _buildAppBar(context),
       body: SafeArea(
         child: Column(
-        children: [
-          _buildSearchBar(context),
-          _buildCategoryFilter(context),
-          Expanded(
-            child: _buildProductsGrid(context),
-          ),
-        ],
-      ),
+          children: [
+            _buildSearchBar(context),
+            const SizedBox(height: 8),
+            _buildQuickFilters(context),
+            const SizedBox(height: 8),
+            _buildCategoryFilter(context),
+            Expanded(
+              child: _buildProductsGrid(context),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _buildFloatingCartButton(context),
     );
@@ -77,26 +85,52 @@ class _HomeScreenState extends State<HomeScreen> {
             return const SizedBox.shrink();
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.shopping_cart_outlined),
-          onPressed: () => context.go('/cart'),
-        ),
-        BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            if (state is AuthAuthenticated) {
-              return IconButton(
-                icon: const Icon(Icons.person_outline),
-                onPressed: () => context.go('/profile'),
-                tooltip: 'Profile',
-              );
-            }
-            return IconButton(
-              icon: const Icon(Icons.login),
-              onPressed: () => context.go('/login'),
-            );
-          },
-        ),
       ],
+    );
+  }
+
+  Widget _buildQuickFilters(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final filter = _quickFilters[index];
+          final isSelected = _selectedCategory == filter.category;
+
+          return FilterChip(
+            label: Text(filter.label),
+            selected: isSelected,
+            showCheckmark: false,
+            onSelected: (_) {
+              setState(() {
+                _selectedCategory = filter.category;
+              });
+
+              if (filter.category == null) {
+                context.read<ProductsBloc>().add(const LoadProducts());
+              } else {
+                context
+                    .read<ProductsBloc>()
+                    .add(FilterProductsByCategory(filter.category!));
+              }
+            },
+            backgroundColor: AppColors.surface,
+            selectedColor: AppColors.primary,
+            side: BorderSide(
+              color: isSelected ? AppColors.primary : AppColors.border,
+            ),
+            labelStyle: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          );
+        },
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemCount: _quickFilters.length,
+      ),
     );
   }
 
@@ -143,14 +177,31 @@ class _HomeScreenState extends State<HomeScreen> {
           return const SizedBox.shrink();
         }
 
+        final quickFilterSet = _quickFilters
+            .where((filter) => filter.category != null)
+            .map((filter) => filter.category!.toLowerCase())
+            .toSet();
+
+        final categories = state.categories
+            .where((category) {
+              final lower = category.toLowerCase();
+              return lower != 'all' &&
+                  lower != 'all products' &&
+                  !quickFilterSet.contains(lower);
+            })
+            .toList();
+
+        if (categories.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
         return SizedBox(
           height: 50,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              _buildCategoryChip(context, null, 'All'),
-              ...state.categories.map(
+              ...categories.map(
                 (category) => _buildCategoryChip(context, category, category),
               ),
             ],
@@ -171,6 +222,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: FilterChip(
         label: Text(label),
         selected: isSelected,
+        showCheckmark: false,
+        backgroundColor: AppColors.surface,
+        selectedColor: AppColors.primaryLight,
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : AppColors.border,
+        ),
         onSelected: (selected) {
           setState(() {
             _selectedCategory = selected ? category : null;
@@ -183,10 +240,9 @@ class _HomeScreenState extends State<HomeScreen> {
             context.read<ProductsBloc>().add(const LoadProducts());
           }
         },
-        selectedColor: AppColors.primaryLight,
         labelStyle: TextStyle(
           color: isSelected ? AppColors.primary : AppColors.textPrimary,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
         ),
       ),
     );
@@ -254,9 +310,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               childAspectRatio: Responsive.getResponsiveValue(
                 context,
-                mobile: 0.8,
-                tablet: 0.85,
-                desktop: 0.9,
+                mobile: 0.72,
+                tablet: 0.8,
+                desktop: 0.86,
               ),
             ),
             itemCount: state.products.length,
@@ -265,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return ProductCard(
                 product: product,
                 onTap: () {
-                  context.go('/product/${product.id}');
+                  context.push('/product/${product.id}');
                 },
                 onAddToCart: () {
                   context.read<CartBloc>().add(
@@ -343,5 +399,12 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+}
+
+class _QuickFilter {
+  const _QuickFilter({required this.label, this.category});
+
+  final String label;
+  final String? category;
 }
 

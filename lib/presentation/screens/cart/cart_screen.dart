@@ -9,7 +9,9 @@ import '../../bloc/cart/cart_bloc.dart';
 import '../../widgets/custom_button.dart';
 
 class CartScreen extends StatelessWidget {
-  const CartScreen({super.key});
+  const CartScreen({super.key, this.onContinueShopping});
+
+  final VoidCallback? onContinueShopping;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,8 @@ class CartScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   CustomButton(
                     text: 'Continue Shopping',
-                    onPressed: () => context.go('/'),
+                    onPressed:
+                        onContinueShopping ?? () => context.go('/'),
                     type: ButtonType.primary,
                   ),
                 ],

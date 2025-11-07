@@ -30,7 +30,6 @@ class StripePaymentService implements PaymentService {
     // Simulate payment processing
     await Future.delayed(const Duration(seconds: 2));
     
-    // Mock implementation - In production, integrate with Stripe SDK
     if (method == PaymentMethod.stripe) {
       return PaymentResult(
         success: true,

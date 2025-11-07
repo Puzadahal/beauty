@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "931147776998",
+    "project_id": "beauty-and-cosmetics-8513a",
+    "storage_bucket": "beauty-and-cosmetics-8513a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:931147776998:android:bc60398e359ea2739d4c27",
+        "android_client_info": {
+          "package_name": "com.example.beauty_cosmetics"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "931147776998-0mfphftgmmu15qo8537iam70vfjd21v2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDy1sA8hXknzaZue9xiPSFSVLQ5xjoGm3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "931147776998-0mfphftgmmu15qo8537iam70vfjd21v2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
