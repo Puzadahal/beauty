@@ -206,15 +206,12 @@ class ApiService {
     }
 
     final items = (data['items'] as List<dynamic>? ?? [])
-        .map(
-          (item) =>
-              CartItemModel.fromJson(Map<String, dynamic>.from(item as Map)),
-        )
+        .map((item) => CartItemModel.fromJson(Map<String, dynamic>.from(item)))
         .toList();
 
     final shippingAddressData = data['shippingAddress'];
     final shippingAddressMap = shippingAddressData is Map
-        ? Map<String, dynamic>.from(shippingAddressData as Map)
+        ? Map<String, dynamic>.from(shippingAddressData)
         : <String, dynamic>{
             'fullName': '',
             'phone': '',
@@ -705,6 +702,4 @@ class ApiService {
       isFeatured: true,
     ),
   ];
-
-  static final List<OrderModel> _mockOrders = [];
 }

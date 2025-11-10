@@ -10,7 +10,7 @@ import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/admin/admin_dashboard_screen.dart';
 import '../../presentation/screens/admin/admin_products_screen.dart';
 import '../../presentation/screens/admin/admin_orders_screen.dart';
-
+import '../../payment/presentation/pages/esewa_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
@@ -19,6 +19,17 @@ final appRouter = GoRouter(
       path: '/splash',
       name: 'splash',
       builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/payments/esewa',
+      name: 'esewa-payment',
+      builder: (context, state) {
+        final args = state.extra as EsewaPaymentArguments?;
+        return EsewaScreen(
+          amount: args?.amount ?? 0,
+          paymentData: args?.paymentData,
+        );
+      },
     ),
     GoRoute(
       path: '/',
@@ -53,7 +64,7 @@ final appRouter = GoRouter(
       name: 'signup',
       builder: (context, state) => const SignupScreen(),
     ),
-  
+
     GoRoute(
       path: '/profile',
       name: 'profile',
@@ -78,4 +89,3 @@ final appRouter = GoRouter(
     ),
   ],
 );
-

@@ -191,13 +191,13 @@ class ProductDetailScreen extends StatelessWidget {
     return Row(
       children: [
         Text(
-          '\$${product.price.toStringAsFixed(2)}',
+          'Rs ${product.price.toStringAsFixed(2)}',
           style: TextStyles.price,
         ),
         if (product.originalPrice != null) ...[
           const SizedBox(width: 16),
           Text(
-            '\$${product.originalPrice!.toStringAsFixed(2)}',
+            'Rs ${product.originalPrice!.toStringAsFixed(2)}',
             style: TextStyles.priceOriginal,
           ),
           const SizedBox(width: 8),

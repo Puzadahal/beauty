@@ -67,7 +67,7 @@ class AdminOrdersScreen extends StatelessWidget {
       child: ExpansionTile(
         title: Text('Order #${order.id.substring(0, 8)}'),
         subtitle: Text(
-          '${order.items.length} items • \$${order.total.toStringAsFixed(2)}',
+          '${order.items.length} items • Rs ${order.total.toStringAsFixed(2)}',
         ),
         trailing: _buildStatusChip(order.status),
         children: [

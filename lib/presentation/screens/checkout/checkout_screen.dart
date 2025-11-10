@@ -8,6 +8,7 @@ import '../../bloc/orders/orders_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../widgets/custom_button.dart';
 import '../../../data/models/order_model.dart';
+import '../../../payment/presentation/pages/esewa_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -25,10 +26,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _zipController = TextEditingController();
-  final _countryController = TextEditingController(text: 'United States');
+  final _countryController = TextEditingController(text: '');
 
   PaymentMethod _selectedPaymentMethod = PaymentMethod.stripe;
   bool _isProcessing = false;
+
+  static const double _shippingFlatRate = 5.0;
+  static const double _taxRate = 0.1;
 
   @override
   void dispose() {
@@ -43,15 +47,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
+  double _calculateTax(double subtotal) => subtotal * _taxRate;
+
+  double _calculateTotal(CartState cartState) {
+    final subtotal = cartState.totalPrice;
+    final shipping = _shippingFlatRate;
+    final tax = _calculateTax(subtotal);
+    return subtotal + shipping + tax;
+  }
+
+  String _formatCurrency(double amount) => 'Rs ${amount.toStringAsFixed(2)}';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Checkout'),
-      ),
+      appBar: AppBar(title: const Text('Checkout')),
       body: BlocListener<OrdersBloc, OrdersState>(
         listener: (context, state) {
           if (state is OrderCreated) {
+            setState(() => _isProcessing = false);
             context.read<CartBloc>().add(const ClearCart());
             Navigator.of(context).popUntil((route) => route.isFirst);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -77,10 +91,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Your cart is empty',
-                      style: TextStyles.h5,
-                    ),
+                    Text('Your cart is empty', style: TextStyles.h5),
                     const SizedBox(height: 16),
                     CustomButton(
                       text: 'Continue Shopping',
@@ -100,7 +111,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     _buildShippingInfo(),
                     const SizedBox(height: 24),
-                    _buildPaymentMethod(),
+                    _buildPaymentMethod(cartState),
                     const SizedBox(height: 24),
                     _buildOrderSummary(cartState),
                     const SizedBox(height: 24),
@@ -125,7 +136,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           controller: _nameController,
           decoration: const InputDecoration(
             labelText: 'Full Name',
-            hintText: 'John Doe',
+            hintText: '',
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -139,7 +150,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           controller: _emailController,
           decoration: const InputDecoration(
             labelText: 'Email',
-            hintText: 'john@example.com',
+            hintText: '',
           ),
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
@@ -157,7 +168,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           controller: _phoneController,
           decoration: const InputDecoration(
             labelText: 'Phone Number',
-            hintText: '+1 234 567 8900',
+            hintText: '',
           ),
           keyboardType: TextInputType.phone,
           validator: (value) {
@@ -172,7 +183,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           controller: _addressController,
           decoration: const InputDecoration(
             labelText: 'Address Line 1',
-            hintText: '123 Main Street',
+            hintText: '',
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -189,7 +200,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 controller: _cityController,
                 decoration: const InputDecoration(
                   labelText: 'City',
-                  hintText: 'New York',
+                  hintText: '',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -205,7 +216,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 controller: _stateController,
                 decoration: const InputDecoration(
                   labelText: 'State',
-                  hintText: 'NY',
+                  hintText: '',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -239,9 +250,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Expanded(
               child: TextFormField(
                 controller: _countryController,
-                decoration: const InputDecoration(
-                  labelText: 'Country',
-                ),
+                decoration: const InputDecoration(labelText: 'Country'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter country';
@@ -256,7 +265,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildPaymentMethod() {
+  Widget _buildPaymentMethod(CartState cartState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -268,9 +277,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             value: method,
             groupValue: _selectedPaymentMethod,
             onChanged: (value) {
+              if (value == null) return;
               setState(() {
-                _selectedPaymentMethod = value!;
+                _selectedPaymentMethod = value;
               });
+
+              if (value == PaymentMethod.esewa) {
+                final total = _calculateTotal(cartState);
+                final productId =
+                    'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+
+                context.pushNamed(
+                  'esewa-payment',
+                  extra: EsewaPaymentArguments(
+                    amount: total,
+                    paymentData: {
+                      'amount': total,
+                      'currency': 'NPR',
+                      'productId': productId,
+                      'productName': 'Beauty & Cosmetics Order',
+                      'callbackUrl': 'https://example.com/esewa-callback',
+                    },
+                  ),
+                );
+              }
             },
           );
         }),
@@ -295,8 +325,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildOrderSummary(CartState cartState) {
     final subtotal = cartState.totalPrice;
-    final shipping = 5.00;
-    final tax = subtotal * 0.1;
+    final shipping = _shippingFlatRate;
+    final tax = _calculateTax(subtotal);
     final total = subtotal + shipping + tax;
 
     return Card(
@@ -311,7 +341,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Subtotal', style: TextStyles.bodyMedium),
-                Text('\$${subtotal.toStringAsFixed(2)}', style: TextStyles.bodyMedium),
+                Text(
+                  _formatCurrency(subtotal),
+                  style: TextStyles.bodyMedium,
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -319,7 +352,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Shipping', style: TextStyles.bodyMedium),
-                Text('\$${shipping.toStringAsFixed(2)}', style: TextStyles.bodyMedium),
+                Text(
+                  _formatCurrency(shipping),
+                  style: TextStyles.bodyMedium,
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -327,7 +363,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Tax', style: TextStyles.bodyMedium),
-                Text('\$${tax.toStringAsFixed(2)}', style: TextStyles.bodyMedium),
+                Text(
+                  _formatCurrency(tax),
+                  style: TextStyles.bodyMedium,
+                ),
               ],
             ),
             const Divider(),
@@ -335,7 +374,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Total', style: TextStyles.h5),
-                Text('\$${total.toStringAsFixed(2)}', style: TextStyles.price),
+                Text(_formatCurrency(total), style: TextStyles.price),
               ],
             ),
           ],
@@ -346,8 +385,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildPlaceOrderButton(CartState cartState) {
     final subtotal = cartState.totalPrice;
-    final shipping = 5.00;
-    final tax = subtotal * 0.1;
+    final shipping = _shippingFlatRate;
+    final tax = _calculateTax(subtotal);
     final total = subtotal + shipping + tax;
 
     return BlocBuilder<AuthBloc, AuthState>(
@@ -389,15 +428,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       shippingAddress: shippingAddress,
                     );
 
+                    final paymentData = {'amount': total, 'currency': 'NPR'};
+
+                    if (_selectedPaymentMethod == PaymentMethod.esewa) {
+                      paymentData.addAll({
+                        'productId':
+                            'ORDER-${DateTime.now().millisecondsSinceEpoch}',
+                        'productName': 'Beauty & Cosmetics Order',
+                        'callbackUrl': 'https://example.com/esewa-callback',
+                      });
+                    }
+
                     context.read<OrdersBloc>().add(
-                          CreateOrder(
-                            order: order,
-                            paymentData: {
-                              'amount': total,
-                              'currency': 'USD',
-                            },
-                          ),
-                        );
+                      CreateOrder(order: order, paymentData: paymentData),
+                    );
                   }
                 },
           isFullWidth: true,
@@ -408,4 +452,3 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 }
-

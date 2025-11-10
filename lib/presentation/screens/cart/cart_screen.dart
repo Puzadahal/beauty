@@ -122,7 +122,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$${item.product.price.toStringAsFixed(2)}',
+                    'Rs ${item.product.price.toStringAsFixed(2)}',
                     style: TextStyles.priceSmall,
                   ),
                 ],
@@ -172,7 +172,7 @@ class CartScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${item.totalPrice.toStringAsFixed(2)}',
+                  'Rs ${item.totalPrice.toStringAsFixed(2)}',
                   style: TextStyles.priceSmall,
                 ),
               ],
@@ -207,7 +207,7 @@ class CartScreen extends StatelessWidget {
                 style: TextStyles.bodyLarge,
               ),
               Text(
-                '\$${state.totalPrice.toStringAsFixed(2)}',
+                'Rs ${state.totalPrice.toStringAsFixed(2)}',
                 style: TextStyles.bodyLarge,
               ),
             ],
@@ -221,7 +221,7 @@ class CartScreen extends StatelessWidget {
                 style: TextStyles.bodyMedium,
               ),
               Text(
-                '\$5.00',
+                'Rs 5.00',
                 style: TextStyles.bodyMedium,
               ),
             ],
@@ -235,7 +235,7 @@ class CartScreen extends StatelessWidget {
                 style: TextStyles.h5,
               ),
               Text(
-                '\$${(state.totalPrice + 5.00).toStringAsFixed(2)}',
+                'Rs ${(state.totalPrice + 5.00).toStringAsFixed(2)}',
                 style: TextStyles.price,
               ),
             ],

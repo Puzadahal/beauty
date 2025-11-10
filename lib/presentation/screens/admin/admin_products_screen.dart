@@ -80,7 +80,7 @@ class _AdminProductsScreenState extends State<AdminProductsScreen> {
           backgroundImage: NetworkImage(product.imageUrl),
         ),
         title: Text(product.name),
-        subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
+        subtitle: Text('Rs ${product.price.toStringAsFixed(2)}'),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

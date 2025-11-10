@@ -45,16 +45,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: _buildAppBar(context),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildSearchBar(context),
-            const SizedBox(height: 8),
-            _buildQuickFilters(context),
-            const SizedBox(height: 8),
-            _buildCategoryFilter(context),
-            Expanded(
-              child: _buildProductsGrid(context),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSearchBar(context),
+                  const SizedBox(height: 8),
+                  _buildQuickFilters(context),
+                  const SizedBox(height: 8),
+                  _buildCategoryFilter(context),
+                ],
+              ),
             ),
+            _buildProductsSliver(context),
           ],
         ),
       ),
@@ -111,9 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
               if (filter.category == null) {
                 context.read<ProductsBloc>().add(const LoadProducts());
               } else {
-                context
-                    .read<ProductsBloc>()
-                    .add(FilterProductsByCategory(filter.category!));
+                context.read<ProductsBloc>().add(
+                  FilterProductsByCategory(filter.category!),
+                );
               }
             },
             backgroundColor: AppColors.surface,
@@ -182,14 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
             .map((filter) => filter.category!.toLowerCase())
             .toSet();
 
-        final categories = state.categories
-            .where((category) {
-              final lower = category.toLowerCase();
-              return lower != 'all' &&
-                  lower != 'all products' &&
-                  !quickFilterSet.contains(lower);
-            })
-            .toList();
+        final categories = state.categories.where((category) {
+          final lower = category.toLowerCase();
+          return lower != 'all' &&
+              lower != 'all products' &&
+              !quickFilterSet.contains(lower);
+        }).toList();
 
         if (categories.isEmpty) {
           return const SizedBox.shrink();
@@ -233,9 +237,9 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedCategory = selected ? category : null;
           });
           if (selected && category != null) {
-            context
-                .read<ProductsBloc>()
-                .add(FilterProductsByCategory(category));
+            context.read<ProductsBloc>().add(
+              FilterProductsByCategory(category),
+            );
           } else {
             context.read<ProductsBloc>().add(const LoadProducts());
           }
@@ -248,44 +252,50 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProductsGrid(BuildContext context) {
+  Widget _buildProductsSliver(BuildContext context) {
     return BlocBuilder<ProductsBloc, ProductsState>(
       builder: (context, state) {
         if (state is ProductsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (state is ProductsError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(state.message),
-                const SizedBox(height: 16),
-                CustomButton(
-                  text: 'Retry',
-                  onPressed: () {
-                    context.read<ProductsBloc>().add(const LoadProducts());
-                  },
-                ),
-              ],
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(state.message),
+                  const SizedBox(height: 16),
+                  CustomButton(
+                    text: 'Retry',
+                    onPressed: () {
+                      context.read<ProductsBloc>().add(const LoadProducts());
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         if (state is ProductsLoaded) {
           if (state.products.isEmpty) {
-            return Center(
-              child: Text(
-                'No products found',
-                style: TextStyles.bodyLarge,
+            return SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text('No products found', style: TextStyles.bodyLarge),
               ),
             );
           }
 
           final crossAxisCount = Responsive.getGridCrossAxisCount(context);
 
-          return GridView.builder(
+          return SliverPadding(
             padding: EdgeInsets.all(
               Responsive.getResponsiveValue(
                 context,
@@ -294,58 +304,62 @@ class _HomeScreenState extends State<HomeScreen> {
                 desktop: 24,
               ),
             ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: Responsive.getResponsiveValue(
-                context,
-                mobile: 12,
-                tablet: 16,
-                desktop: 20,
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: Responsive.getResponsiveValue(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  desktop: 20,
+                ),
+                mainAxisSpacing: Responsive.getResponsiveValue(
+                  context,
+                  mobile: 12,
+                  tablet: 16,
+                  desktop: 20,
+                ),
+                childAspectRatio: Responsive.getResponsiveValue(
+                  context,
+                mobile: 0.48,
+                  tablet: 0.6,
+                  desktop: 0.65,
+                ),
               ),
-              mainAxisSpacing: Responsive.getResponsiveValue(
-                context,
-                mobile: 12,
-                tablet: 16,
-                desktop: 20,
-              ),
-              childAspectRatio: Responsive.getResponsiveValue(
-                context,
-                mobile: 0.72,
-                tablet: 0.8,
-                desktop: 0.86,
-              ),
-            ),
-            itemCount: state.products.length,
-            itemBuilder: (context, index) {
-              final product = state.products[index];
-              return ProductCard(
-                product: product,
-                onTap: () {
-                  context.push('/product/${product.id}');
-                },
-                onAddToCart: () {
-                  context.read<CartBloc>().add(
-                        AddToCart(
-                          CartItemModel(
-                            id: '',
-                            product: product,
-                            quantity: 1,
-                          ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final product = state.products[index];
+                  return ProductCard(
+                    product: product,
+                    onTap: () {
+                      context.push('/product/${product.id}');
+                    },
+                    onAddToCart: () {
+                      context.read<CartBloc>().add(
+                            AddToCart(
+                              CartItemModel(
+                                id: '',
+                                product: product,
+                                quantity: 1,
+                              ),
+                            ),
+                          );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${product.name} added to cart'),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${product.name} added to cart'),
-                      duration: const Duration(seconds: 2),
-                    ),
+                    },
                   );
                 },
-              );
-            },
+                childCount: state.products.length,
+              ),
+            ),
           );
         }
 
-        return const SizedBox.shrink();
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
       },
     );
   }
@@ -390,7 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           label: Text(
-            'Cart (\$${state.totalPrice.toStringAsFixed(2)})',
+            'Cart (Rs ${state.totalPrice.toStringAsFixed(2)})',
             style: TextStyles.buttonMedium.copyWith(color: Colors.white),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -407,4 +421,3 @@ class _QuickFilter {
   final String label;
   final String? category;
 }
-

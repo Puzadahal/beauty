@@ -342,7 +342,7 @@ class ProfileScreen extends StatelessWidget {
         style: TextStyles.bodyMedium,
       ),
       subtitle: Text(
-        '${order.items.length} items • \$${order.total.toStringAsFixed(2)}',
+        '${order.items.length} items • Rs ${order.total.toStringAsFixed(2)}',
         style: TextStyles.bodySmall,
       ),
       trailing: Chip(
