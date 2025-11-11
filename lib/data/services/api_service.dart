@@ -36,26 +36,24 @@ class ApiService {
 
       final snapshot = await query.get();
 
-      var products = snapshot.docs.map(_productFromSnapshot).toList();
-
-      if (search != null && search.isNotEmpty) {
-        final lowerQuery = search.toLowerCase();
-        products = products
-            .where(
-              (product) =>
-                  product.name.toLowerCase().contains(lowerQuery) ||
-                  product.description.toLowerCase().contains(lowerQuery),
-            )
-            .toList();
+      if (snapshot.docs.isEmpty) {
+        return _filterProductsList(
+          _mockProducts,
+          category: category,
+          search: search,
+          featured: featured,
+        );
       }
 
-      if (products.isEmpty) {
-        return _mockProducts;
-      }
-
-      return products;
+      final products = snapshot.docs.map(_productFromSnapshot).toList();
+      return _filterProductsList(products, search: search);
     } catch (_) {
-      return _mockProducts;
+      return _filterProductsList(
+        _mockProducts,
+        category: category,
+        search: search,
+        featured: featured,
+      );
     }
   }
 
@@ -66,7 +64,7 @@ class ApiService {
         return _productFromSnapshot(doc);
       }
     } catch (_) {
-      // Fall through to mock fallback
+      
     }
 
     try {
@@ -147,6 +145,39 @@ class ApiService {
     } catch (_) {
       return null;
     }
+  }
+
+  List<ProductModel> _filterProductsList(
+    List<ProductModel> products, {
+    String? category,
+    String? search,
+    bool? featured,
+  }) {
+    final normalizedCategory = category?.trim().toLowerCase();
+    final hasCategory =
+        normalizedCategory != null && normalizedCategory.isNotEmpty;
+    final trimmedSearch = search?.trim();
+    final lowerQuery = (trimmedSearch != null && trimmedSearch.isNotEmpty)
+        ? trimmedSearch.toLowerCase()
+        : null;
+
+    return products.where((product) {
+      if (hasCategory &&
+          product.category.toLowerCase().trim() != normalizedCategory) {
+        return false;
+      }
+      if (featured != null && product.isFeatured != featured) {
+        return false;
+      }
+      if (lowerQuery != null) {
+        final name = product.name.toLowerCase();
+        final description = product.description.toLowerCase();
+        if (!name.contains(lowerQuery) && !description.contains(lowerQuery)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
   }
 
   ProductModel _productFromSnapshot(
@@ -281,7 +312,7 @@ class ApiService {
       name: 'The Liquid Matte Lipstick',
       description:
           'Long-lasting matte lipstick with a smooth finish. Perfect for everyday wear.',
-      price: 29.99,
+      price: 1200,
       originalPrice: 39.99,
       imageUrl:
           'https://images.unsplash.com/photo-1760860992755-c432351d47e9?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=880',
@@ -298,9 +329,9 @@ class ApiService {
       name: 'Hydrating Face Serum',
       description:
           'Intensive hydrating serum with hyaluronic acid for glowing skin.',
-      price: 45.99,
+      price: 450,
       imageUrl:
-          'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400',
+          'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400',
       category: 'Skincare',
       brand: 'Glow Care',
       rating: 4.8,
@@ -313,7 +344,7 @@ class ApiService {
       id: '3',
       name: 'Volume Mascara',
       description: 'Lengthening and volumizing mascara for dramatic lashes.',
-      price: 24.99,
+      price: 365,
       originalPrice: 34.99,
       imageUrl:
           'https://www.muastore.co.uk/cdn/shop/files/Mascara-Volume-Lid-OFF---2024.jpg?v=1740471997',
@@ -329,7 +360,7 @@ class ApiService {
       id: '4',
       name: 'Vitamin C Brightening Cream',
       description: 'Brightening face cream with vitamin C for even skin tone.',
-      price: 39.99,
+      price: 400,
       imageUrl:
           'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=400',
       category: 'Skincare',
@@ -345,7 +376,7 @@ class ApiService {
       name: 'Eyeshadow Palette',
       description:
           '12-color eyeshadow palette with matte and shimmer finishes.',
-      price: 54.99,
+      price: 2000,
       originalPrice: 69.99,
       imageUrl:
           'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400',
@@ -361,7 +392,7 @@ class ApiService {
       id: '6',
       name: 'Sunscreen SPF 50',
       description: 'Broad spectrum sunscreen for daily protection.',
-      price: 32.99,
+      price: 865,
       imageUrl:
           'https://www.jiomart.com/images/product/original/492519488/cetaphil-sun-spf-50-high-protection-light-gel-50-ml-product-images-o492519488-p591211859-0-202205180431.jpg?im=Resize=(420,420)',
       category: 'Skincare',
@@ -376,7 +407,7 @@ class ApiService {
       id: '7',
       name: 'Nail Polish Set',
       description: 'Set of 6 long-lasting nail polishes in trending colors.',
-      price: 19.99,
+      price: 100,
       originalPrice: 29.99,
       imageUrl:
           'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400',
@@ -392,7 +423,7 @@ class ApiService {
       id: '8',
       name: 'Facial Cleanser',
       description: 'Gentle foaming cleanser for all skin types.',
-      price: 22.99,
+      price: 2200,
       imageUrl:
           'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400',
       category: 'Skincare',
@@ -407,7 +438,7 @@ class ApiService {
       id: '9',
       name: 'Matte Foundation',
       description: 'Full coverage matte foundation for all-day wear.',
-      price: 42.99,
+      price: 1700,
       originalPrice: 52.99,
       imageUrl:
           'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400',
@@ -438,7 +469,7 @@ class ApiService {
       id: '11',
       name: 'Blush Palette',
       description: '6-shade blush palette for natural to bold looks.',
-      price: 34.99,
+      price: 1200,
       originalPrice: 44.99,
       imageUrl:
           'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400',
@@ -454,7 +485,7 @@ class ApiService {
       id: '12',
       name: 'Moisturizing Face Mask',
       description: 'Hydrating face mask with aloe vera and hyaluronic acid.',
-      price: 28.99,
+      price: 50,
       imageUrl:
           'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=400',
       category: 'Skincare',
@@ -469,10 +500,10 @@ class ApiService {
       id: '13',
       name: 'Eyeliner Set',
       description: 'Set of 3 waterproof eyeliners in black, brown, and navy.',
-      price: 27.99,
+      price: 270,
       originalPrice: 37.99,
       imageUrl:
-          'https://images-cdn.ubuy.co.in/663dc1b2459b0b02e61e89f7-cosprof-liquid-eyeliner-stamp-waterproof.jpg',
+          'https://images.unsplash.com/photo-1596464716121-7b14d8b5dc54?w=400',
       category: 'Makeup',
       brand: 'Line Perfect',
       rating: 4.3,
@@ -485,7 +516,7 @@ class ApiService {
       id: '14',
       name: 'Toner with Rose Water',
       description: 'Refreshing toner with rose water for balanced skin.',
-      price: 24.99,
+      price: 250,
       imageUrl:
           'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400',
       category: 'Skincare',
@@ -500,7 +531,7 @@ class ApiService {
       id: '15',
       name: 'Concealer Stick',
       description: 'Full coverage concealer for dark circles and blemishes.',
-      price: 21.99,
+      price: 2100.99,
       imageUrl:
           'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400',
       category: 'Makeup',
@@ -515,7 +546,7 @@ class ApiService {
       id: '16',
       name: 'Face Oil Blend',
       description: 'Nourishing face oil with argan and jojoba oils.',
-      price: 49.99,
+      price: 490.99,
       imageUrl:
           'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=400',
       category: 'Skincare',
@@ -530,7 +561,7 @@ class ApiService {
       id: '17',
       name: 'Highlighter Palette',
       description: '3-shade highlighter palette for glowing complexion.',
-      price: 38.99,
+      price: 850,
       originalPrice: 48.99,
       imageUrl:
           'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400',
@@ -546,7 +577,7 @@ class ApiService {
       id: '18',
       name: 'Exfoliating Scrub',
       description: 'Gentle exfoliating scrub with natural ingredients.',
-      price: 26.99,
+      price: 260,
       imageUrl:
           'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400',
       category: 'Skincare',
@@ -561,7 +592,7 @@ class ApiService {
       id: '19',
       name: 'Brow Pencil & Gel Set',
       description: 'Complete brow kit with pencil and clear gel.',
-      price: 23.99,
+      price: 235,
       imageUrl:
           'https://beautyscout.ph/wp-content/uploads/2021/11/Brow-Wow-Duo_Taupe.jpg',
       category: 'Makeup',
@@ -577,7 +608,7 @@ class ApiService {
       name: 'Eye Cream',
       description:
           'Anti-aging eye cream to reduce fine lines and dark circles.',
-      price: 44.99,
+      price: 440.99,
       imageUrl:
           'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=400',
       category: 'Skincare',

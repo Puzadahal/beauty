@@ -12,11 +12,10 @@ class FirebaseAuthService {
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
     required LocalStorageService localStorageService,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn =
-            kIsWeb ? null : (googleSignIn ?? GoogleSignIn.instance),
-        _localStorageService = localStorageService;
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _googleSignIn = kIsWeb ? null : (googleSignIn ?? GoogleSignIn.instance),
+       _localStorageService = localStorageService;
 
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
@@ -115,22 +114,23 @@ class FirebaseAuthService {
         );
       }
 
+      // Sign out any cached session so the chooser is always presented.
+      await googleSignIn.signOut();
       final googleAccount = await googleSignIn.authenticate();
-      final idToken = googleAccount.authentication.idToken;
 
+      final String? idToken = googleAccount.authentication.idToken;
       if (idToken == null) {
         throw FirebaseAuthException(
-          code: 'sign_in_aborted',
-          message: 'Google sign-in was cancelled.',
+          code: 'invalid-credential',
+          message: 'Missing Google authentication tokens.',
         );
       }
 
-      final credential = GoogleAuthProvider.credential(
-        idToken: idToken,
-      );
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
 
-      final userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
       firebaseUser = userCredential.user;
       displayNameFallback = googleAccount.displayName;
       photoUrlFallback = googleAccount.photoUrl;

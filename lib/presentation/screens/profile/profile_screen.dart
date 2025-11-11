@@ -84,9 +84,9 @@ class ProfileScreen extends StatelessWidget {
             title: 'Order History',
             children: [
               BlocProvider(
-                create: (context) => OrdersBloc(
-                  apiService: ApiService(),
-                )..add(LoadOrders(user.id)),
+                create: (context) =>
+                    OrdersBloc(apiService: ApiService())
+                      ..add(LoadOrders(user.id)),
                 child: BlocBuilder<OrdersBloc, OrdersState>(
                   builder: (context, state) {
                     if (state is OrdersLoading) {
@@ -141,7 +141,9 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
-                            context.read<AuthBloc>().add(const LogoutRequested());
+                            context.read<AuthBloc>().add(
+                              const LogoutRequested(),
+                            );
                             Navigator.pop(context);
                             context.go('/login');
                           },
@@ -202,6 +204,15 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context, user) {
+    final double avatarRadius = Responsive.getResponsiveValue(
+      context,
+      mobile: 40,
+      tablet: 50,
+      desktop: 60,
+    );
+
+    final double editRadius = avatarRadius * 0.35;
+
     return Card(
       child: Padding(
         padding: EdgeInsets.all(
@@ -212,73 +223,79 @@ class ProfileScreen extends StatelessWidget {
             desktop: 32,
           ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: Responsive.getResponsiveValue(
-                context,
-                mobile: 40,
-                tablet: 50,
-                desktop: 60,
-              ),
-              backgroundColor: AppColors.primaryLight,
-              child: user.avatarUrl != null
-                  ? ClipOval(
-                      child: Image.network(
-                        user.avatarUrl!,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : Icon(
-                      Icons.person,
-                      size: Responsive.getResponsiveValue(
-                        context,
-                        mobile: 40,
-                        tablet: 50,
-                        desktop: 60,
-                      ),
-                      color: AppColors.primary,
-                    ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomRight,
                 children: [
-                  Text(
-                    user.name ?? 'User',
-                    style: TextStyles.h4,
+                  CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundColor: AppColors.primaryLight,
+                    backgroundImage: user.avatarUrl != null
+                        ? NetworkImage(user.avatarUrl!)
+                        : null,
+                    child: user.avatarUrl == null
+                        ? Icon(
+                            Icons.person,
+                            size: avatarRadius,
+                            color: AppColors.primary,
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email,
-                    style: TextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  if (user.isAdmin) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'ADMIN',
-                        style: TextStyles.labelSmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
+                  Positioned(
+                    right: -4,
+                    bottom: -4,
+                    child: CircleAvatar(
+                      radius: editRadius,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: editRadius - 2,
+                        backgroundColor: AppColors.primary,
+                        child: const Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 18,
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            Text(
+              user.name ?? 'User',
+              style: TextStyles.h4,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              user.email,
+              style: TextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (user.isAdmin) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'ADMIN',
+                  style: TextStyles.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -296,10 +313,7 @@ class ProfileScreen extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(
-              title,
-              style: TextStyles.h5,
-            ),
+            child: Text(title, style: TextStyles.h5),
           ),
           const Divider(height: 1),
           ...children,
@@ -317,10 +331,7 @@ class ProfileScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: AppColors.primary),
       title: Text(label, style: TextStyles.bodySmall),
-      subtitle: Text(
-        value,
-        style: TextStyles.bodyMedium,
-      ),
+      subtitle: Text(value, style: TextStyles.bodyMedium),
       trailing: value == 'Not set'
           ? TextButton(
               onPressed: () {
@@ -336,7 +347,10 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildOrderTile(BuildContext context, order) {
     return ListTile(
-      leading: const Icon(Icons.shopping_bag_outlined, color: AppColors.primary),
+      leading: const Icon(
+        Icons.shopping_bag_outlined,
+        color: AppColors.primary,
+      ),
       title: Text(
         'Order #${order.id.substring(0, 8)}',
         style: TextStyles.bodyMedium,
@@ -356,9 +370,9 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: _getStatusColor(order.status).withOpacity(0.2),
       ),
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order details coming soon!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Order details coming soon!')));
       },
     );
   }
@@ -398,4 +412,3 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 }
-

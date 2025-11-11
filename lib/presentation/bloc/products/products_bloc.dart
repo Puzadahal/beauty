@@ -21,15 +21,16 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     LoadProducts event,
     Emitter<ProductsState> emit,
   ) async {
-    emit(ProductsLoading());
+    final categories = state.categories;
+    emit(ProductsLoading(categories: categories));
     try {
       final products = await apiService.getProducts(
         category: event.category,
         featured: event.featured,
       );
-      emit(ProductsLoaded(products: products));
+      emit(ProductsLoaded(products: products, categories: categories));
     } catch (e) {
-      emit(ProductsError(message: e.toString()));
+      emit(ProductsError(message: e.toString(), categories: categories));
     }
   }
 
@@ -37,16 +38,19 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     LoadProductById event,
     Emitter<ProductsState> emit,
   ) async {
-    emit(ProductsLoading());
+    final categories = state.categories;
+    emit(ProductsLoading(categories: categories));
     try {
       final product = await apiService.getProductById(event.id);
       if (product != null) {
-        emit(ProductLoaded(product: product));
+        emit(ProductLoaded(product: product, categories: categories));
       } else {
-        emit(ProductsError(message: 'Product not found'));
+        emit(
+          ProductsError(message: 'Product not found', categories: categories),
+        );
       }
     } catch (e) {
-      emit(ProductsError(message: e.toString()));
+      emit(ProductsError(message: e.toString(), categories: categories));
     }
   }
 
@@ -56,9 +60,29 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
   ) async {
     try {
       final categories = await apiService.getCategories();
-      emit(CategoriesLoaded(categories: categories));
+      final currentState = state;
+      if (currentState is ProductsLoaded) {
+        emit(
+          ProductsLoaded(
+            products: currentState.products,
+            categories: categories,
+          ),
+        );
+      } else if (currentState is ProductLoaded) {
+        emit(
+          ProductLoaded(product: currentState.product, categories: categories),
+        );
+      } else if (currentState is ProductsLoading) {
+        emit(ProductsLoading(categories: categories));
+      } else if (currentState is ProductsError) {
+        emit(
+          ProductsError(message: currentState.message, categories: categories),
+        );
+      } else {
+        emit(ProductsInitial(categories: categories));
+      }
     } catch (e) {
-      emit(ProductsError(message: e.toString()));
+      emit(ProductsError(message: e.toString(), categories: state.categories));
     }
   }
 
@@ -66,12 +90,13 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     SearchProducts event,
     Emitter<ProductsState> emit,
   ) async {
-    emit(ProductsLoading());
+    final categories = state.categories;
+    emit(ProductsLoading(categories: categories));
     try {
       final products = await apiService.getProducts(search: event.query);
-      emit(ProductsLoaded(products: products));
+      emit(ProductsLoaded(products: products, categories: categories));
     } catch (e) {
-      emit(ProductsError(message: e.toString()));
+      emit(ProductsError(message: e.toString(), categories: categories));
     }
   }
 
@@ -79,13 +104,13 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     FilterProductsByCategory event,
     Emitter<ProductsState> emit,
   ) async {
-    emit(ProductsLoading());
+    final categories = state.categories;
+    emit(ProductsLoading(categories: categories));
     try {
       final products = await apiService.getProducts(category: event.category);
-      emit(ProductsLoaded(products: products));
+      emit(ProductsLoaded(products: products, categories: categories));
     } catch (e) {
-      emit(ProductsError(message: e.toString()));
+      emit(ProductsError(message: e.toString(), categories: categories));
     }
   }
 }
-

@@ -24,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
   static const List<_QuickFilter> _quickFilters = <_QuickFilter>[
     _QuickFilter(label: 'All Products', category: null),
     _QuickFilter(label: 'Skincare', category: 'Skincare'),
-    _QuickFilter(label: 'Cosmetics', category: 'Cosmetics'),
+    _QuickFilter(label: 'Makeup', category: 'Makeup'),
+    _QuickFilter(label: 'Nails', category: 'Nails'),
   ];
 
   @override
@@ -179,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCategoryFilter(BuildContext context) {
     return BlocBuilder<ProductsBloc, ProductsState>(
       builder: (context, state) {
-        if (state is! CategoriesLoaded) {
+        final categories = state.categories;
+        if (categories.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -188,14 +190,14 @@ class _HomeScreenState extends State<HomeScreen> {
             .map((filter) => filter.category!.toLowerCase())
             .toSet();
 
-        final categories = state.categories.where((category) {
+        final filteredCategories = categories.where((category) {
           final lower = category.toLowerCase();
           return lower != 'all' &&
               lower != 'all products' &&
               !quickFilterSet.contains(lower);
         }).toList();
 
-        if (categories.isEmpty) {
+        if (filteredCategories.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -205,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              ...categories.map(
+              ...filteredCategories.map(
                 (category) => _buildCategoryChip(context, category, category),
               ),
             ],
@@ -321,40 +323,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 childAspectRatio: Responsive.getResponsiveValue(
                   context,
-                mobile: 0.48,
+                  mobile: 0.48,
                   tablet: 0.6,
                   desktop: 0.65,
                 ),
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final product = state.products[index];
-                  return ProductCard(
-                    product: product,
-                    onTap: () {
-                      context.push('/product/${product.id}');
-                    },
-                    onAddToCart: () {
-                      context.read<CartBloc>().add(
-                            AddToCart(
-                              CartItemModel(
-                                id: '',
-                                product: product,
-                                quantity: 1,
-                              ),
-                            ),
-                          );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${product.name} added to cart'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                  );
-                },
-                childCount: state.products.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final product = state.products[index];
+                return ProductCard(
+                  product: product,
+                  onTap: () {
+                    context.push('/product/${product.id}');
+                  },
+                  onAddToCart: () {
+                    context.read<CartBloc>().add(
+                      AddToCart(
+                        CartItemModel(id: '', product: product, quantity: 1),
+                      ),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${product.name} added to cart'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                );
+              }, childCount: state.products.length),
             ),
           );
         }
