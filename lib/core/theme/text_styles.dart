@@ -54,7 +54,7 @@ class TextStyles {
       );
 
   static TextStyle get bodyMedium => TextStyle(
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: FontWeight.normal,
         color: AppColors.textPrimary,
         letterSpacing: 0.25,
@@ -76,14 +76,14 @@ class TextStyles {
       );
 
   static TextStyle get labelMedium => TextStyle(
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
         letterSpacing: 0.5,
       );
 
   static TextStyle get labelSmall => TextStyle(
-        fontSize: 11,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.textSecondary,
         letterSpacing: 0.5,

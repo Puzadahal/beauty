@@ -222,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         .read<AuthBloc>()
                         .add(const GoogleSignInRequested()),
                     icon: Image.asset(
-                      'assets/icons/google.webp',
+                      'assets/icons/google.jpg',
                       height: 24,
                       width: 24,
                       errorBuilder: (context, error, stackTrace) {

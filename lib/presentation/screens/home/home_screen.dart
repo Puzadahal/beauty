@@ -43,29 +43,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(context),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSearchBar(context),
-                  const SizedBox(height: 8),
-                  _buildQuickFilters(context),
-                  const SizedBox(height: 8),
-                  _buildCategoryFilter(context),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double availableHeight = constraints.maxHeight;
+
+        return Scaffold(
+          appBar: _buildAppBar(context),
+          body: SafeArea(
+            child: SizedBox(
+              height: availableHeight,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSearchBar(context),
+                        const SizedBox(height: 8),
+                        _buildQuickFilters(context),
+                        const SizedBox(height: 8),
+                        _buildCategoryFilter(context),
+                      ],
+                    ),
+                  ),
+                  _buildProductsSliver(context),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: availableHeight * 0.1),
+                  ),
                 ],
               ),
             ),
-            _buildProductsSliver(context),
-          ],
-        ),
-      ),
-      floatingActionButton: _buildFloatingCartButton(context),
+          ),
+          floatingActionButton: _buildFloatingCartButton(context),
+        );
+      },
     );
   }
 
@@ -323,9 +335,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 childAspectRatio: Responsive.getResponsiveValue(
                   context,
-                  mobile: 0.48,
-                  tablet: 0.6,
-                  desktop: 0.65,
+                  mobile: 0.36,
+                  tablet: 0.5,
+                  desktop: 0.58,
                 ),
               ),
               delegate: SliverChildBuilderDelegate((context, index) {

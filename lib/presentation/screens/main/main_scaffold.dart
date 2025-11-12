@@ -37,10 +37,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
         builder: (context, cartState) {
           final cartCount = cartState.totalItems;
@@ -207,7 +204,7 @@ class BrandsScreen extends StatelessWidget {
               horizontalPadding: horizontalPadding,
               featuredBrand: _brands.first,
             ),
-            const SizedBox(height: _brandHeroOverlap + 32),
+            const SizedBox(height:60),
             Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: maxWidth),
@@ -216,24 +213,25 @@ class BrandsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: _brandHeroOverlap + 16),
                       Text(
                         'Shop by Brand',
-                        style: TextStyles.h3,
+                        style: TextStyles.h3.copyWith(
+                          fontSize: TextStyles.h3.fontSize! + 2,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Curated collections from the beauty labels loved by our community.',
                         style: TextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 24),
                       _BrandsGrid(brands: _brands),
                       const SizedBox(height: 32),
-                      Text(
-                        'Beauty Journals',
-                        style: TextStyles.h4,
-                      ),
+                      Text('Beauty Journals', style: TextStyles.h4),
                       const SizedBox(height: 12),
                       _BrandStories(stories: _stories),
                       const SizedBox(height: 24),
@@ -267,10 +265,8 @@ class _BrandHeroSection extends StatelessWidget {
       desktop: 320.0,
     );
 
-    final totalHeight = heroHeight + _brandHeroOverlap;
-
     return SizedBox(
-      height: totalHeight,
+      height: heroHeight + _brandHeroOverlap,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -296,7 +292,7 @@ class _BrandHeroSection extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Experience thoughtfully crafted collections, exclusive drops and beauty rituals by experts.',
-                  style: TextStyles.bodyMedium.copyWith(color: Colors.white70),
+                  style: TextStyles.bodyMedium.copyWith(color: Colors.white),
                 ),
               ],
             ),
@@ -348,10 +344,7 @@ class _FeaturedBrandCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        brand.name,
-                        style: TextStyles.h4,
-                      ),
+                      Text(brand.name, style: TextStyles.h4),
                       const SizedBox(height: 4),
                       Text(
                         brand.tagline,
@@ -365,10 +358,7 @@ class _FeaturedBrandCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Text(
-              brand.description,
-              style: TextStyles.bodyMedium,
-            ),
+            Text(brand.description, style: TextStyles.bodyMedium),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
@@ -389,33 +379,39 @@ class _FeaturedBrandCard extends StatelessWidget {
                   .toList(),
             ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hero Pick',
-                      style: TextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      brand.featuredProduct,
-                      style: TextStyles.labelLarge.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Hero Pick',
+                  style: TextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                FilledButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.arrow_outward_rounded),
-                  label: const Text('View Collection'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                const SizedBox(height: 4),
+                Text(
+                  brand.featuredProduct,
+                  style: TextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: FilledButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.arrow_outward_rounded),
+                      label: const Text('View Collection'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -437,8 +433,8 @@ class _BrandsGrid extends StatelessWidget {
     final crossAxisCount = Responsive.isDesktop(context)
         ? 3
         : Responsive.isTablet(context)
-            ? 2
-            : 1;
+        ? 2
+        : 1;
 
     return GridView.builder(
       itemCount: brands.length,
@@ -484,7 +480,9 @@ class _BrandCard extends StatelessWidget {
             backgroundColor: Colors.white,
             child: Text(
               brand.name.substring(0, 1),
-              style: TextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+              style: TextStyles.labelLarge.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -503,31 +501,29 @@ class _BrandCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
+            spacing: 8,
+            runSpacing: 8,
             children: brand.focusAreas
                 .map(
-                  (focus) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
+                  (focus) => Chip(
+                    label: Text(
                       focus,
-                      style: TextStyles.labelSmall.copyWith(
-                        color: AppColors.primaryDark,
+                      style: TextStyles.labelMedium.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 )
                 .toList(),
           ),
-          const SizedBox(height: 12),
+          const Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -540,7 +536,10 @@ class _BrandCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const Icon(Icons.arrow_forward_rounded, color: AppColors.primaryDark),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                color: AppColors.primaryDark,
+              ),
             ],
           ),
         ],
@@ -576,10 +575,7 @@ class _BrandStories extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    story.title,
-                    style: TextStyles.h5,
-                  ),
+                  Text(story.title, style: TextStyles.h5),
                   const SizedBox(height: 8),
                   Text(
                     story.summary,

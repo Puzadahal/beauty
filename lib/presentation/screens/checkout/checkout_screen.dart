@@ -22,11 +22,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _zipController = TextEditingController();
-  final _countryController = TextEditingController(text: '');
+  final _notesController = TextEditingController();
 
   PaymentMethod _selectedPaymentMethod = PaymentMethod.stripe;
   bool _isProcessing = false;
@@ -39,11 +35,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _zipController.dispose();
-    _countryController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -109,7 +101,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildShippingInfo(),
+                    _buildCustomerInfo(),
                     const SizedBox(height: 24),
                     _buildPaymentMethod(cartState),
                     const SizedBox(height: 24),
@@ -126,11 +118,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildShippingInfo() {
+  Widget _buildCustomerInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Shipping Information', style: TextStyles.h5),
+        Text('Contact Details', style: TextStyles.h5),
         const SizedBox(height: 16),
         TextFormField(
           controller: _nameController,
@@ -179,87 +171,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           },
         ),
         const SizedBox(height: 16),
+        const SizedBox(height: 16),
         TextFormField(
-          controller: _addressController,
+          controller: _notesController,
           decoration: const InputDecoration(
-            labelText: 'Address Line 1',
-            hintText: '',
+            labelText: 'Delivery Notes (Optional)',
+            hintText: 'e.g. Leave at reception',
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your address';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  hintText: '',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter city';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _stateController,
-                decoration: const InputDecoration(
-                  labelText: 'State',
-                  hintText: '',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter state';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _zipController,
-                decoration: const InputDecoration(
-                  labelText: 'ZIP Code',
-                  hintText: '10001',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter ZIP code';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _countryController,
-                decoration: const InputDecoration(labelText: 'Country'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter country';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
+          maxLines: 2,
         ),
       ],
     );
