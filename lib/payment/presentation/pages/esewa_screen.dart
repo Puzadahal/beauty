@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../data/models/order_model.dart';
 import '../../../data/services/payment_service.dart';
@@ -67,11 +68,49 @@ class _EsewaScreenState extends State<EsewaScreen> {
         paymentData: paymentData,
       );
 
-      setState(() {
-        _statusMessage = result.success
-            ? 'Payment succeeded. Reference: ${result.transactionId ?? 'N/A'}'
-            : 'Payment failed: ${result.errorMessage ?? 'Unknown error'}';
-      });
+      if (result.success) {
+        // Navigate to homepage and show success dialog
+        if (mounted) {
+          final transactionId = result.transactionId;
+          
+          // Navigate to homepage 
+          context.go('/');
+          
+          // Show success dialog after navigation completes
+          // Use WidgetsBinding to ensure we have a valid context after navigation
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              // Show dialog using root navigator to display on the new route
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                useRootNavigator: true,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
+                    title: const Text('Payment Successful'),
+                    content: Text(
+                      'Your payment has been processed successfully.\n'
+                      'Reference: ${transactionId ?? 'N/A'}',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            });
+          });
+        }
+      } else {
+        setState(() {
+          _statusMessage = 'Payment failed: ${result.errorMessage ?? 'Unknown error'}';
+        });
+      }
     } catch (e) {
       setState(() {
         _statusMessage = 'Payment error: ${e.toString()}';
@@ -88,17 +127,14 @@ class _EsewaScreenState extends State<EsewaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('eSewa Payment Demo')),
+      appBar: AppBar(title: const Text('eSewa Payment')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Test the eSewa integration using the official SDK. '
-              'Tap the button below to initiate a payment with the provided test credentials.',
-            ),
-            const SizedBox(height: 8),
+            
+           
             Text(
               'Amount to pay: Rs ${_resolvedAmount.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.titleMedium,

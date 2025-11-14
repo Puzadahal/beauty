@@ -27,7 +27,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   PaymentMethod _selectedPaymentMethod = PaymentMethod.stripe;
   bool _isProcessing = false;
 
-  static const double _shippingFlatRate = 5.0;
+  static const double _deliveryCharge = 5.0;
   static const double _taxRate = 0.1;
 
   @override
@@ -43,9 +43,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   double _calculateTotal(CartState cartState) {
     final subtotal = cartState.totalPrice;
-    final shipping = _shippingFlatRate;
+    final delivery = _deliveryCharge;
     final tax = _calculateTax(subtotal);
-    return subtotal + shipping + tax;
+    return subtotal + delivery + tax;
   }
 
   String _formatCurrency(double amount) => 'Rs ${amount.toStringAsFixed(2)}';
@@ -53,7 +53,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/cart'),
+        ),
+      ),
       body: BlocListener<OrdersBloc, OrdersState>(
         listener: (context, state) {
           if (state is OrderCreated) {
@@ -140,10 +146,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         const SizedBox(height: 16),
         TextFormField(
           controller: _emailController,
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            hintText: '',
-          ),
+          decoration: const InputDecoration(labelText: 'Email', hintText: ''),
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -190,39 +193,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       children: [
         Text('Payment Method', style: TextStyles.h5),
         const SizedBox(height: 16),
-        ...PaymentMethod.values.map((method) {
-          return RadioListTile<PaymentMethod>(
-            title: Text(_getPaymentMethodName(method)),
-            value: method,
-            groupValue: _selectedPaymentMethod,
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() {
-                _selectedPaymentMethod = value;
-              });
+        DropdownButtonFormField<PaymentMethod>(
+          value: _selectedPaymentMethod,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Select Payment Method',
+          ),
+          items: PaymentMethod.values
+              .map(
+                (method) => DropdownMenuItem(
+                  value: method,
+                  child: Text(_getPaymentMethodName(method)),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() {
+              _selectedPaymentMethod = value;
+            });
 
-              if (value == PaymentMethod.esewa) {
-                final total = _calculateTotal(cartState);
-                final productId =
-                    'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+            if (value == PaymentMethod.esewa) {
+              final total = _calculateTotal(cartState);
+              final productId =
+                  'ORDER-${DateTime.now().millisecondsSinceEpoch}';
 
-                context.pushNamed(
-                  'esewa-payment',
-                  extra: EsewaPaymentArguments(
-                    amount: total,
-                    paymentData: {
-                      'amount': total,
-                      'currency': 'NPR',
-                      'productId': productId,
-                      'productName': 'Beauty & Cosmetics Order',
-                      'callbackUrl': 'https://example.com/esewa-callback',
-                    },
-                  ),
-                );
-              }
-            },
-          );
-        }),
+              context.pushNamed(
+                'esewa-payment',
+                extra: EsewaPaymentArguments(
+                  amount: total,
+                  paymentData: {
+                    'amount': total,
+                    'currency': 'NPR',
+                    'productId': productId,
+                    'productName': 'Beauty & Cosmetics Order',
+                    'callbackUrl': 'https://example.com/esewa-callback',
+                  },
+                ),
+              );
+            }
+          },
+        ),
       ],
     );
   }
@@ -244,9 +255,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildOrderSummary(CartState cartState) {
     final subtotal = cartState.totalPrice;
-    final shipping = _shippingFlatRate;
+    final delivery = _deliveryCharge;
     final tax = _calculateTax(subtotal);
-    final total = subtotal + shipping + tax;
+    final total = subtotal + delivery + tax;
 
     return Card(
       child: Padding(
@@ -260,21 +271,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Subtotal', style: TextStyles.bodyMedium),
-                Text(
-                  _formatCurrency(subtotal),
-                  style: TextStyles.bodyMedium,
-                ),
+                Text(_formatCurrency(subtotal), style: TextStyles.bodyMedium),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Shipping', style: TextStyles.bodyMedium),
-                Text(
-                  _formatCurrency(shipping),
-                  style: TextStyles.bodyMedium,
-                ),
+                Text('Delivery Charge', style: TextStyles.bodyMedium),
+                Text(_formatCurrency(delivery), style: TextStyles.bodyMedium),
               ],
             ),
             const SizedBox(height: 8),
@@ -282,10 +287,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Tax', style: TextStyles.bodyMedium),
-                Text(
-                  _formatCurrency(tax),
-                  style: TextStyles.bodyMedium,
-                ),
+                Text(_formatCurrency(tax), style: TextStyles.bodyMedium),
               ],
             ),
             const Divider(),
@@ -304,9 +306,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildPlaceOrderButton(CartState cartState) {
     final subtotal = cartState.totalPrice;
-    final shipping = _shippingFlatRate;
+    final delivery = _deliveryCharge;
     final tax = _calculateTax(subtotal);
-    final total = subtotal + shipping + tax;
+    final total = subtotal + delivery + tax;
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
@@ -325,11 +327,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       fullName: _nameController.text,
                       phone: _phoneController.text,
                       email: _emailController.text,
-                      addressLine1: _addressController.text,
-                      city: _cityController.text,
-                      state: _stateController.text,
-                      zipCode: _zipController.text,
-                      country: _countryController.text,
+                      addressLine1: _notesController.text.isNotEmpty
+                          ? _notesController.text
+                          : 'Not provided',
+                      city: '',
+                      state: '',
+                      zipCode: '',
+                      country: '',
                     );
 
                     final order = OrderModel(
@@ -337,7 +341,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       userId: userId,
                       items: cartState.items,
                       subtotal: subtotal,
-                      shippingCost: shipping,
+                      shippingCost: delivery,
                       tax: tax,
                       total: total,
                       status: OrderStatus.pending,
