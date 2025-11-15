@@ -7,6 +7,10 @@ abstract class CartState extends Equatable {
 
   double get totalPrice => items.fold(0.0, (sum, item) => sum + item.totalPrice);
   int get totalItems => items.fold(0, (sum, item) => sum + item.quantity);
+  
+  List<CartItemModel> get selectedItems => items.where((item) => item.isSelected).toList();
+  double get selectedTotalPrice => selectedItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+  int get selectedItemsCount => selectedItems.fold(0, (sum, item) => sum + item.quantity);
 
   @override
   List<Object?> get props => [items];

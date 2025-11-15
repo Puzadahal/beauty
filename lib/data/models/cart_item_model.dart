@@ -7,6 +7,7 @@ class CartItemModel extends Equatable {
   final int quantity;
   final String? selectedSize;
   final String? selectedColor;
+  final bool isSelected;
 
   const CartItemModel({
     required this.id,
@@ -14,6 +15,7 @@ class CartItemModel extends Equatable {
     required this.quantity,
     this.selectedSize,
     this.selectedColor,
+    this.isSelected = false,
   });
 
   double get totalPrice => product.price * quantity;
@@ -24,6 +26,7 @@ class CartItemModel extends Equatable {
     int? quantity,
     String? selectedSize,
     String? selectedColor,
+    bool? isSelected,
   }) {
     return CartItemModel(
       id: id ?? this.id,
@@ -31,6 +34,7 @@ class CartItemModel extends Equatable {
       quantity: quantity ?? this.quantity,
       selectedSize: selectedSize ?? this.selectedSize,
       selectedColor: selectedColor ?? this.selectedColor,
+      isSelected: isSelected ?? this.isSelected,
     );
   }
 
@@ -41,6 +45,7 @@ class CartItemModel extends Equatable {
       'quantity': quantity,
       'selectedSize': selectedSize,
       'selectedColor': selectedColor,
+      'isSelected': isSelected,
     };
   }
 
@@ -51,10 +56,11 @@ class CartItemModel extends Equatable {
       quantity: json['quantity'] as int,
       selectedSize: json['selectedSize'] as String?,
       selectedColor: json['selectedColor'] as String?,
+      isSelected: json['isSelected'] as bool? ?? false,
     );
   }
 
   @override
-  List<Object?> get props => [id, product, quantity, selectedSize, selectedColor];
+  List<Object?> get props => [id, product, quantity, selectedSize, selectedColor, isSelected];
 }
 

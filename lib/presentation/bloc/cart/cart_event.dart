@@ -46,3 +46,29 @@ class ClearCart extends CartEvent {
   const ClearCart();
 }
 
+class ToggleItemSelection extends CartEvent {
+  final String itemId;
+
+  const ToggleItemSelection(this.itemId);
+
+  @override
+  List<Object?> get props => [itemId];
+}
+
+class SelectAllItems extends CartEvent {
+  const SelectAllItems();
+}
+
+class DeselectAllItems extends CartEvent {
+  const DeselectAllItems();
+}
+
+class BuyNowItem extends CartEvent {
+  final String itemId;
+
+  const BuyNowItem(this.itemId);
+
+  @override
+  List<Object?> get props => [itemId];
+}
+

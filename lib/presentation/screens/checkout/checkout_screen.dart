@@ -42,7 +42,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double _calculateTax(double subtotal) => subtotal * _taxRate;
 
   double _calculateTotal(CartState cartState) {
-    final subtotal = cartState.totalPrice;
+    final subtotal = cartState.selectedTotalPrice;
     final delivery = _deliveryCharge;
     final tax = _calculateTax(subtotal);
     return subtotal + delivery + tax;
@@ -64,7 +64,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         listener: (context, state) {
           if (state is OrderCreated) {
             setState(() => _isProcessing = false);
-            context.read<CartBloc>().add(const ClearCart());
+            // Remove only selected items from cart
+            final cartState = context.read<CartBloc>().state;
+            for (final item in cartState.selectedItems) {
+              context.read<CartBloc>().add(RemoveFromCart(item.id));
+            }
             Navigator.of(context).popUntil((route) => route.isFirst);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -84,16 +88,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         },
         child: BlocBuilder<CartBloc, CartState>(
           builder: (context, cartState) {
-            if (cartState.items.isEmpty) {
+            final selectedItems = cartState.selectedItems;
+            
+            if (selectedItems.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Your cart is empty', style: TextStyles.h5),
+                    Text('No items selected', style: TextStyles.h5),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please go back to cart and select items to checkout',
+                      style: TextStyles.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 16),
                     CustomButton(
-                      text: 'Continue Shopping',
-                      onPressed: () => context.go('/'),
+                      text: 'Back to Cart',
+                      onPressed: () => context.go('/cart'),
                     ),
                   ],
                 ),
@@ -254,7 +266,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildOrderSummary(CartState cartState) {
-    final subtotal = cartState.totalPrice;
+    final subtotal = cartState.selectedTotalPrice;
     final delivery = _deliveryCharge;
     final tax = _calculateTax(subtotal);
     final total = subtotal + delivery + tax;
@@ -305,7 +317,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildPlaceOrderButton(CartState cartState) {
-    final subtotal = cartState.totalPrice;
+    final subtotal = cartState.selectedTotalPrice;
     final delivery = _deliveryCharge;
     final tax = _calculateTax(subtotal);
     final total = subtotal + delivery + tax;
@@ -336,7 +348,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     final order = OrderModel(
                       id: '',
                       userId: userId,
-                      items: cartState.items,
+                      items: cartState.selectedItems,
                       subtotal: subtotal,
                       shippingCost: delivery,
                       tax: tax,

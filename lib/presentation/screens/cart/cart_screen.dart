@@ -17,6 +17,18 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Go back to the previous screen
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              // If there's no previous route, go to home
+              context.go('/');
+            }
+          },
+        ),
         title: const Text('Shopping Cart'),
       ),
       body: BlocBuilder<CartBloc, CartState>(
@@ -57,6 +69,7 @@ class CartScreen extends StatelessWidget {
 
           return Column(
             children: [
+              _buildSelectionHeader(context, state),
               Expanded(
                 child: ListView.builder(
                   padding: Responsive.getScreenPadding(context),
@@ -83,6 +96,13 @@ class CartScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Checkbox(
+              value: item.isSelected,
+              onChanged: (value) {
+                context.read<CartBloc>().add(ToggleItemSelection(item.id));
+              },
+            ),
+            const SizedBox(width: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: CachedNetworkImage(
@@ -124,6 +144,26 @@ class CartScreen extends StatelessWidget {
                   Text(
                     'Rs ${item.product.price.toStringAsFixed(2)}',
                     style: TextStyles.priceSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      // Buy Now - select only this item and go to checkout
+                      // First, deselect all items and select only this one
+                      context.read<CartBloc>().add(BuyNowItem(item.id));
+                      // Use a small delay to ensure state is updated
+                      Future.delayed(const Duration(milliseconds: 50), () {
+                        if (context.mounted) {
+                          context.go('/checkout');
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.shopping_bag, size: 16),
+                    label: const Text('Buy Now'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: const Size(0, 32),
+                    ),
                   ),
                 ],
               ),
@@ -183,7 +223,58 @@ class CartScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSelectionHeader(BuildContext context, CartState state) {
+    final allSelected = state.items.isNotEmpty && 
+        state.items.every((item) => item.isSelected);
+    final someSelected = state.items.any((item) => item.isSelected);
+
+    return Container(
+      padding: Responsive.getScreenPadding(context),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          bottom: BorderSide(color: AppColors.border),
+        ),
+      ),
+      child: Row(
+        children: [
+          Checkbox(
+            value: allSelected,
+            tristate: true,
+            onChanged: (value) {
+              if (allSelected) {
+                context.read<CartBloc>().add(const DeselectAllItems());
+              } else {
+                context.read<CartBloc>().add(const SelectAllItems());
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+          Text(
+            allSelected 
+                ? 'Deselect All' 
+                : someSelected 
+                    ? 'Select All' 
+                    : 'Select Items',
+            style: TextStyles.bodyMedium,
+          ),
+          const Spacer(),
+          if (someSelected)
+            Text(
+              '${state.selectedItemsCount} item${state.selectedItemsCount != 1 ? 's' : ''} selected',
+              style: TextStyles.bodySmall.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCartSummary(BuildContext context, CartState state) {
+    final selectedItems = state.selectedItems;
+    final hasSelectedItems = selectedItems.isNotEmpty;
+
     return Container(
       padding: Responsive.getScreenPadding(context),
       decoration: BoxDecoration(
@@ -207,7 +298,7 @@ class CartScreen extends StatelessWidget {
                 style: TextStyles.bodyLarge,
               ),
               Text(
-                'Rs ${state.totalPrice.toStringAsFixed(2)}',
+                'Rs ${state.selectedTotalPrice.toStringAsFixed(2)}',
                 style: TextStyles.bodyLarge,
               ),
             ],
@@ -235,18 +326,33 @@ class CartScreen extends StatelessWidget {
                 style: TextStyles.h5,
               ),
               Text(
-                'Rs ${(state.totalPrice + 5.00).toStringAsFixed(2)}',
+                'Rs ${(state.selectedTotalPrice + 5.00).toStringAsFixed(2)}',
                 style: TextStyles.price,
               ),
             ],
           ),
           const SizedBox(height: 16),
           CustomButton(
-            text: 'Proceed to Checkout',
-            onPressed: () => context.go('/checkout'),
+            text: hasSelectedItems 
+                ? 'Proceed to Checkout (${state.selectedItemsCount} item${state.selectedItemsCount != 1 ? 's' : ''})'
+                : 'Select Items to Checkout',
+            onPressed: hasSelectedItems 
+                ? () => context.go('/checkout')
+                : null,
             isFullWidth: true,
             type: ButtonType.primary,
           ),
+          if (!hasSelectedItems)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Please select at least one item to proceed',
+                style: TextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
         ],
       ),
     );
