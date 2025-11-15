@@ -177,9 +177,9 @@ class ShippingAddress extends Equatable {
   final String addressLine1;
   final String? addressLine2;
   final String city;
-  final String state;
-  final String zipCode;
-  final String country;
+  final String? state;
+  final String? zipCode;
+  final String? country;
 
   const ShippingAddress({
     required this.fullName,
@@ -188,9 +188,9 @@ class ShippingAddress extends Equatable {
     required this.addressLine1,
     this.addressLine2,
     required this.city,
-    required this.state,
-    required this.zipCode,
-    required this.country,
+    this.state,
+    this.zipCode,
+    this.country,
   });
 
   Map<String, dynamic> toJson() {
@@ -215,9 +215,9 @@ class ShippingAddress extends Equatable {
       addressLine1: json['addressLine1'] as String,
       addressLine2: json['addressLine2'] as String?,
       city: json['city'] as String,
-      state: json['state'] as String,
-      zipCode: json['zipCode'] as String,
-      country: json['country'] as String,
+      state: json['state'] as String?,
+      zipCode: json['zipCode'] as String?,
+      country: json['country'] as String?,
     );
   }
 

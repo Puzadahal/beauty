@@ -164,10 +164,33 @@ class KhaltiPaymentService implements PaymentService {
     await Future.delayed(const Duration(seconds: 2));
 
     if (method == PaymentMethod.khalti) {
-      // In production, integrate with Khalti SDK
+    
       return PaymentResult(
         success: true,
         transactionId: 'khalti_${DateTime.now().millisecondsSinceEpoch}',
+      );
+    }
+
+    return PaymentResult(
+      success: false,
+      errorMessage: 'Invalid payment method',
+    );
+  }
+}
+
+class CashOnDeliveryPaymentService implements PaymentService {
+  @override
+  Future<PaymentResult> processPayment({
+    required double amount,
+    required PaymentMethod method,
+    required Map<String, dynamic> paymentData,
+  }) async {
+    // Cash on delivery doesn't require payment processing
+    // Payment will be collected upon delivery
+    if (method == PaymentMethod.cashOnDelivery) {
+      return PaymentResult(
+        success: true,
+        transactionId: 'cod_${DateTime.now().millisecondsSinceEpoch}',
       );
     }
 
@@ -189,8 +212,8 @@ class PaymentServiceFactory {
         return EsewaPaymentService();
       case PaymentMethod.khalti:
         return KhaltiPaymentService();
-      default:
-        return StripePaymentService();
+      case PaymentMethod.cashOnDelivery:
+        return CashOnDeliveryPaymentService();
     }
   }
 }

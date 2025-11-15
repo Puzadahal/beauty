@@ -37,22 +37,28 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   ) async {
     emit(OrdersLoading());
     try {
-      // Process payment first
-      final paymentService = PaymentServiceFactory.getService(event.order.paymentMethod);
-      final paymentResult = await paymentService.processPayment(
-        amount: event.order.total,
-        method: event.order.paymentMethod,
-        paymentData: event.paymentData,
-      );
+      // Process payment first (skip for cash on delivery)
+      PaymentStatus paymentStatus = PaymentStatus.pending;
+      
+      if (event.order.paymentMethod != PaymentMethod.cashOnDelivery) {
+        final paymentService = PaymentServiceFactory.getService(event.order.paymentMethod);
+        final paymentResult = await paymentService.processPayment(
+          amount: event.order.total,
+          method: event.order.paymentMethod,
+          paymentData: event.paymentData,
+        );
 
-      if (!paymentResult.success) {
-        emit(OrdersError(message: paymentResult.errorMessage ?? 'Payment failed'));
-        return;
+        if (!paymentResult.success) {
+          emit(OrdersError(message: paymentResult.errorMessage ?? 'Payment failed'));
+          return;
+        }
+        
+        paymentStatus = PaymentStatus.completed;
       }
 
       // Create order with payment status
       final orderWithPayment = event.order.copyWith(
-        paymentStatus: PaymentStatus.completed,
+        paymentStatus: paymentStatus,
       );
 
       final createdOrder = await apiService.createOrder(orderWithPayment);

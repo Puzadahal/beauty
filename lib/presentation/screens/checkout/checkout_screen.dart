@@ -331,9 +331,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ? _notesController.text
                           : 'Not provided',
                       city: '',
-                      state: '',
-                      zipCode: '',
-                      country: '',
                     );
 
                     final order = OrderModel(
